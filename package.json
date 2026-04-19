@@ -1,11 +1,19 @@
 {
   "name": "claude-code-plugin-codex",
   "version": "0.1.0",
-  "description": "Claude review plugin for Codex CLI — inverse of openai/codex-plugin-cc. Stop-time review of Codex turns by Claude (Opus 4.7).",
+  "description": "Claude review plugin for Codex CLI — inverse of openai/codex-plugin-cc. Stop-time review of Codex turns by Claude.",
   "type": "module",
   "private": true,
   "engines": {
     "node": ">=20.10"
+  },
+  "homepage": "https://github.com/biggora/claude-code-plugin-codex#readme",
+  "bugs": {
+    "url": "https://github.com/biggora/claude-code-plugin-codex/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/biggora/claude-code-plugin-codex.git"
   },
   "bin": {
     "codex-with-claude": "./scripts/codex-with-claude.mjs"
@@ -38,7 +46,7 @@
   ],
   "license": "MIT",
   "author": {
-    "name": "agbiggora",
-    "email": "agbiggora@gmail.com"
+    "name": "biggora",
+    "email": "aleksej@gordejev.lv"
   }
 }
