@@ -1,0 +1,10 @@
+{
+  "session_id": "test-session-1",
+  "cwd": ".",
+  "hook_event_name": "Stop",
+  "model": "gpt-5.4-codex",
+  "turn_id": "turn-2",
+  "stop_hook_active": true,
+  "transcript_path": null,
+  "last_assistant_message": "Second pass after block."
+}

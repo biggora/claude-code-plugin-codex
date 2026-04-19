@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/agbiggora/claude-code-plugin-codex/schemas/review-output.schema.json",
+  "title": "Claude Review Output",
+  "description": "Structured output from Claude adversarial-review of a Codex turn.",
+  "type": "object",
+  "required": ["verdict", "summary", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "verdict": {
+      "description": "Overall verdict on the Codex response.",
+      "enum": ["allow", "block"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "One-paragraph human-readable summary of the verdict."
+    },
+    "findings": {
+      "type": "array",
+      "description": "Concrete issues, each independently actionable.",
+      "items": {
+        "type": "object",
+        "required": ["severity", "title", "confidence"],
+        "additionalProperties": false,
+        "properties": {
+          "severity": { "enum": ["info", "low", "medium", "high", "critical"] },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Short imperative title of the finding."
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 4000,
+            "description": "Longer explanation with evidence and reasoning."
+          },
+          "file": {
+            "type": "string",
+            "description": "Repository-relative file path, if applicable."
+          },
+          "line_start": { "type": "integer", "minimum": 1 },
+          "line_end": { "type": "integer", "minimum": 1 },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Reviewer confidence, 0..1."
+          },
+          "suggestion": {
+            "type": "string",
+            "maxLength": 4000,
+            "description": "Concrete fix or mitigation."
+          }
+        }
+      }
+    },
+    "next_action": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Single-sentence instruction the host agent should execute next."
+    }
+  }
+}

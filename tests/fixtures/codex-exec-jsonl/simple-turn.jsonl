@@ -1,0 +1,5 @@
+{"type":"thread.started","session_id":"sess-abc-123","model":"gpt-5.4-codex"}
+{"type":"turn.started","turn_id":"t1"}
+{"type":"item.completed","item":{"role":"assistant","text":"I analyzed the function and the logic looks correct."}}
+{"type":"item.completed","item":{"role":"assistant","text":"No changes needed."}}
+{"type":"turn.completed","turn_id":"t1","last_assistant_message":"I analyzed the function and the logic looks correct. No changes needed."}

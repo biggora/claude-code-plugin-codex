@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "name": "claude-review-local",
+  "description": "Local marketplace entry for the claude-review plugin — Claude as stop-time reviewer for Codex CLI.",
+  "plugins": [
+    {
+      "name": "claude-review",
+      "source": "./",
+      "manifest": ".codex-plugin/plugin.json",
+      "category": "review",
+      "tags": ["codex", "claude", "review", "stop-hook", "anthropic"],
+      "homepage": "https://github.com/agbiggora/claude-code-plugin-codex"
+    }
+  ]
+}

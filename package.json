@@ -1,0 +1,44 @@
+{
+  "name": "claude-code-plugin-codex",
+  "version": "0.1.0",
+  "description": "Claude review plugin for Codex CLI — inverse of openai/codex-plugin-cc. Stop-time review of Codex turns by Claude (Opus 4.7).",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20.10"
+  },
+  "bin": {
+    "codex-with-claude": "./scripts/codex-with-claude.mjs"
+  },
+  "scripts": {
+    "test": "node --test --test-reporter=spec tests/*.test.mjs",
+    "test:watch": "node --test --watch tests/*.test.mjs",
+    "test:int": "CLAUDE_REVIEW_INTEGRATION=1 node --test tests/integration/*.test.mjs",
+    "setup": "node scripts/claude-companion.mjs setup"
+  },
+  "dependencies": {
+    "tree-kill": "^1.2.2",
+    "@iarna/toml": "^2.2.5"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.40.0"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.0"
+  },
+  "keywords": [
+    "codex",
+    "claude",
+    "review",
+    "hook",
+    "stop",
+    "plugin",
+    "anthropic",
+    "openai"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "agbiggora",
+    "email": "agbiggora@gmail.com"
+  }
+}

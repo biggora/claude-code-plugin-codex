@@ -1,0 +1,10 @@
+{
+  "session_id": "test-session-1",
+  "cwd": ".",
+  "hook_event_name": "Stop",
+  "model": "gpt-5.4-codex",
+  "turn_id": "turn-1",
+  "stop_hook_active": false,
+  "transcript_path": null,
+  "last_assistant_message": "I added a try/catch that swallows all errors silently: ```js\ntry { riskyOp(); } catch {}\n``` Done."
+}

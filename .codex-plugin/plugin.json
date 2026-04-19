@@ -1,0 +1,46 @@
+{
+  "name": "claude-review",
+  "version": "0.1.0",
+  "description": "Review Codex turns with Claude on Stop. Inverse of openai/codex-plugin-cc.",
+  "author": {
+    "name": "agbiggora",
+    "email": "agbiggora@gmail.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/agbiggora/claude-code-plugin-codex",
+  "repository": "https://github.com/agbiggora/claude-code-plugin-codex",
+  "keywords": [
+    "codex",
+    "claude",
+    "review",
+    "hook",
+    "stop",
+    "anthropic"
+  ],
+  "interface": {
+    "displayName": "Claude Review",
+    "shortDescription": "Claude (Opus 4.7) reviews every Codex turn on Stop and requests rework when needed.",
+    "longDescription": "Codex CLI plugin that invokes Claude as a stop-time reviewer. On every Codex Stop event, the plugin sends the last Codex response to Claude for a read-only critique. If Claude responds BLOCK, Codex receives the critique as a new user prompt and continues working; if ALLOW, the session stops normally. Mirrors the architecture of openai/codex-plugin-cc in reverse.",
+    "developerName": "agbiggora",
+    "category": "review",
+    "capabilities": [
+      "hooks",
+      "commands",
+      "subagents",
+      "skills"
+    ],
+    "brandColor": "#D97757",
+    "defaultPrompt": [
+      "/claude-review:setup --enable-review-gate",
+      "/claude-review:toggle --on",
+      "/claude-review:status"
+    ]
+  },
+  "skills": [
+    "claude-cli-runtime",
+    "claude-result-handling",
+    "claude-api-prompting"
+  ],
+  "mcpServers": {},
+  "apps": {}
+}
