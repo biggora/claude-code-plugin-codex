@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { PROMPTS_DIR } from "./paths.mjs";
+import {readFileSync} from "node:fs";
+import {join} from "node:path";
+import {PROMPTS_DIR} from "./paths.mjs";
 
 const cache = new Map();
 
@@ -15,7 +15,7 @@ export function loadPrompt(name) {
 
 export function interpolate(template, vars, { strict = true } = {}) {
   const seen = new Set();
-  const output = template.replace(/\{\{\s*([A-Z0-9_]+)\s*\}\}/g, (_, key) => {
+  return template.replace(/\{\{\s*([A-Z0-9_]+)\s*\}\}/g, (_, key) => {
     seen.add(key);
     if (!(key in vars)) {
       if (strict) throw new Error(`Missing prompt variable: ${key}`);
@@ -23,7 +23,6 @@ export function interpolate(template, vars, { strict = true } = {}) {
     }
     return String(vars[key] ?? "");
   });
-  return output;
 }
 
 export function sanitizeCodexBlock(raw) {
