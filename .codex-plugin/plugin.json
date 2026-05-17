@@ -37,7 +37,5 @@
     ]
   },
   "skills": "./skills/",
-  "hooks": "./hooks.json",
-  "mcpServers": {},
-  "apps": {}
+  "hooks": "./hooks.json"
 }

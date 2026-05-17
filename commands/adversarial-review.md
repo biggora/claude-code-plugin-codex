@@ -1,7 +1,6 @@
 ---
 description: Structured JSON review validated against review-output.schema.json.
 argument-hint: "<codex response to review>" [--model <id>] [--transport auto|claude-cli|sdk] [--schema <path>] [--json]
-allowed-tools: Bash
 ---
 
 Invoke Claude in adversarial-review mode: Claude must emit JSON matching
@@ -9,12 +8,23 @@ Invoke Claude in adversarial-review mode: Claude must emit JSON matching
 and confidence, next_action). Schema enforcement happens via tool-use when
 the SDK transport is active, or via Ajv post-validation otherwise.
 
+Resolve the plugin root from the `PLUGIN_ROOT` environment variable and invoke
+the cross-platform command shim with the active shell syntax:
+
+PowerShell:
+
+```powershell
+node (Join-Path $env:PLUGIN_ROOT "scripts/slash-command.mjs") adversarial-review $ARGUMENTS
 ```
-PLUGIN_ROOT="${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}"
-node "$PLUGIN_ROOT/scripts/claude-companion.mjs" adversarial-review --args-stdin <<'CLAUDE_REVIEW_ARGS'
-$ARGUMENTS
-CLAUDE_REVIEW_ARGS
+
+POSIX:
+
+```sh
+node "$PLUGIN_ROOT/scripts/slash-command.mjs" adversarial-review $ARGUMENTS
 ```
+
+Do not call `scripts/claude-companion.mjs` directly from this slash command;
+the shim handles command dispatch consistently across platforms.
 
 Render the findings table (severity, file:line, confidence, detail,
 suggestion). If the output cannot be parsed as JSON, surface the raw text and

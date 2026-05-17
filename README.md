@@ -15,9 +15,11 @@ Claude (Opus 4.7 by default) to review Codex turns**.
 - `ALLOW:` → Codex stops normally.
 - `BLOCK:` → Codex treats Claude's critique as a new user prompt and keeps
   working until the review passes (or the user interrupts).
-- Out-of-band commands give you on-demand reviews (`/review`,
-  `/adversarial-review`), deep-reasoning delegation (`/rescue`), and full
-  job control (`/status`, `/result`, `/cancel`, `/toggle`).
+- Out-of-band commands give you on-demand reviews (`/claude-review:review`,
+  `/claude-review:adversarial-review`), deep-reasoning delegation
+  (`/claude-review:rescue`), and full job control
+  (`/claude-review:status`, `/claude-review:result`,
+  `/claude-review:cancel`, `/claude-review:toggle`).
 - A `codex-with-claude` CLI wrapper brings the same loop to Windows (where
   Codex hooks are disabled today) by driving `codex exec --json` and
   `codex exec resume`.
@@ -46,17 +48,20 @@ Windows note: Codex hooks are disabled on Windows as of April 2026. Use
 
 ```bash
 git clone https://github.com/agbiggora/claude-code-plugin-codex \
-  ~/.codex/plugins/claude-review
-cd ~/.codex/plugins/claude-review
+  ~/.codex/marketplaces/claude-review
+cd ~/.codex/marketplaces/claude-review
 npm install
+codex plugin marketplace add ~/.codex/marketplaces/claude-review
 ```
 
-Arm the gate inside the project you want to review:
+Restart Codex after adding the marketplace. In the new Codex session:
 
-```bash
-cd /path/to/your/project
-node ~/.codex/plugins/claude-review/scripts/claude-companion.mjs \
-  setup --enable-review-gate --model claude-opus-4-7
+1. Run `/plugins` and enable `claude-review` if it is not already enabled.
+2. Run `/hooks` and confirm plugin hooks are available.
+3. Arm the gate inside the project you want to review:
+
+```text
+/claude-review:setup --enable-review-gate --model claude-opus-4-7
 ```
 
 Expected output:
@@ -76,6 +81,9 @@ Config (workspace <hash>):
   transport    : auto
   ...
 ```
+
+For local marketplace installs, `codex plugin marketplace upgrade` is not
+supported; remove and re-add the local marketplace after changing its source.
 
 ## Slash commands
 
@@ -218,6 +226,7 @@ scripts/
   stop-review-hook.mjs            # Stop hook entry
   codex-with-claude.mjs           # Windows wrapper
   claude-companion.mjs            # CLI dispatcher (8 commands)
+  slash-command.mjs               # Cross-platform slash command shim
   session-lifecycle-hook.mjs      # SessionStart cleanup
   lib/
     review.mjs                     # shared review logic
@@ -233,7 +242,7 @@ scripts/
     paths.mjs                      # data-dir resolver
     redact.mjs                     # secret scrubbing
     log.mjs                        # structured stderr log
-tests/*.test.mjs                  # 63 unit tests
+tests/*.test.mjs                  # Unit tests
 tests/fixtures/                   # canned JSONL + Stop stdin
 .agents/plugins/marketplace.json  # local Codex marketplace entry
 ```
