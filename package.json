@@ -1,6 +1,6 @@
 {
   "name": "claude-code-plugin-codex",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Claude review plugin for Codex CLI — inverse of openai/codex-plugin-cc. Stop-time review of Codex turns by Claude.",
   "type": "module",
   "engines": {
