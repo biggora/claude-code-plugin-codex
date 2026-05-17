@@ -55,25 +55,36 @@ test("plugin commands: Codex-compatible frontmatter and shim dispatch", () => {
   }
 });
 
-test("plugin marketplace: current local marketplace schema", () => {
+test("plugin marketplace: GitHub-backed marketplace schema", () => {
   const marketplace = JSON.parse(readText(new URL("../.agents/plugins/marketplace.json", import.meta.url)));
-  assert.equal(marketplace.name, "claude-review-local");
+  assert.equal(marketplace.name, "claude-review");
   assert.equal(marketplace.interface.displayName, "Claude Review");
+  assert.match(marketplace.interface.description, /GitHub-backed/);
   assert.equal(marketplace.plugins.length, 1);
 
   const [plugin] = marketplace.plugins;
   assert.equal(plugin.name, "claude-review");
-  assert.deepEqual(plugin.source, { source: "local", path: "./" });
+  assert.deepEqual(plugin.source, {
+    source: "url",
+    url: "https://github.com/biggora/claude-code-plugin-codex.git",
+    ref: "main",
+  });
   assert.deepEqual(plugin.policy, { installation: "AVAILABLE", authentication: "ON_INSTALL" });
   assert.equal(plugin.category, "Productivity");
+  assert.equal(plugin.homepage, "https://github.com/biggora/claude-code-plugin-codex");
   assert.equal(plugin.manifest, undefined);
 });
 
 test("plugin manifest: optional component paths are strings when present", () => {
   const manifest = JSON.parse(readText(new URL("../.codex-plugin/plugin.json", import.meta.url)));
   assert.equal(manifest.name, "claude-review");
+  assert.equal(manifest.homepage, "https://github.com/biggora/claude-code-plugin-codex");
+  assert.equal(manifest.repository, "https://github.com/biggora/claude-code-plugin-codex");
+  assert.equal(manifest.author.email, "agbiggora@gmail.com");
+  assert.equal(manifest.author.url, "https://github.com/biggora");
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.hooks, "./hooks.json");
+  assert.equal(manifest.interface.developerName, "biggora");
   assert.equal(manifest.interface.category, "Productivity");
   assert.deepEqual(manifest.interface.capabilities, ["Interactive", "Read", "Write"]);
 
@@ -85,7 +96,7 @@ test("plugin manifest: optional component paths are strings when present", () =>
   }
 });
 
-test("npm package: local marketplace entry is not ignored", () => {
+test("npm package: GitHub marketplace entry is not ignored", () => {
   const npmignore = readText(new URL("../.npmignore", import.meta.url));
   assert.match(npmignore, /^\.agents\/\*/m);
   assert.match(npmignore, /^!\.agents\/plugins\//m);

@@ -2,14 +2,15 @@
   "name": "claude-review",
   "interface": {
     "displayName": "Claude Review",
-    "description": "Local marketplace entry for the claude-review plugin: Claude as stop-time reviewer for Codex CLI."
+    "description": "GitHub-backed marketplace entry for the claude-review plugin: Claude as stop-time reviewer for Codex CLI."
   },
   "plugins": [
     {
       "name": "claude-review",
       "source": {
-        "source": "local",
-        "path": "./"
+        "source": "url",
+        "url": "https://github.com/biggora/claude-code-plugin-codex.git",
+        "ref": "main"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -23,7 +24,7 @@
         "stop-hook",
         "anthropic"
       ],
-      "homepage": "https://github.com/agbiggora/claude-code-plugin-codex"
+      "homepage": "https://github.com/biggora/claude-code-plugin-codex"
     }
   ]
 }

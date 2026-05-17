@@ -47,11 +47,7 @@ Windows note: Codex hooks are disabled on Windows as of April 2026. Use
 ## Install
 
 ```bash
-git clone https://github.com/agbiggora/claude-code-plugin-codex \
-  ~/.codex/marketplaces/claude-review
-cd ~/.codex/marketplaces/claude-review
-npm install
-codex plugin marketplace add ~/.codex/marketplaces/claude-review
+codex plugin marketplace add biggora/claude-code-plugin-codex --ref main
 ```
 
 Restart Codex after adding the marketplace. In the new Codex session:
@@ -81,9 +77,6 @@ Config (workspace <hash>):
   transport    : auto
   ...
 ```
-
-For local marketplace installs, `codex plugin marketplace upgrade` is not
-supported; remove and re-add the local marketplace after changing its source.
 
 ## Slash commands
 
@@ -244,7 +237,7 @@ scripts/
     log.mjs                        # structured stderr log
 tests/*.test.mjs                  # Unit tests
 tests/fixtures/                   # canned JSONL + Stop stdin
-.agents/plugins/marketplace.json  # local Codex marketplace entry
+.agents/plugins/marketplace.json  # GitHub-backed Codex marketplace entry
 ```
 
 ## Roadmap

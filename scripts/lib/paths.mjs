@@ -12,6 +12,8 @@ export const SCHEMAS_DIR = join(PLUGIN_ROOT, "schemas");
 export const COMMANDS_DIR = join(PLUGIN_ROOT, "commands");
 
 export function getDataRoot() {
+  const fromPlugin = process.env.PLUGIN_DATA;
+  if (fromPlugin) return fromPlugin;
   const fromCodex = process.env.CODEX_PLUGIN_DATA;
   if (fromCodex) return fromCodex;
   const fromClaude = process.env.CLAUDE_PLUGIN_DATA;
