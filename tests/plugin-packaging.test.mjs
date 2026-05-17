@@ -74,6 +74,8 @@ test("plugin manifest: optional component paths are strings when present", () =>
   assert.equal(manifest.name, "claude-review");
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.hooks, "./hooks.json");
+  assert.equal(manifest.interface.category, "Productivity");
+  assert.deepEqual(manifest.interface.capabilities, ["Interactive", "Read", "Write"]);
 
   for (const field of ["skills", "hooks", "mcpServers", "apps"]) {
     if (manifest[field] != null) {

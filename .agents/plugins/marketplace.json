@@ -1,5 +1,5 @@
 {
-  "name": "claude-review-local",
+  "name": "claude-review",
   "interface": {
     "displayName": "Claude Review",
     "description": "Local marketplace entry for the claude-review plugin: Claude as stop-time reviewer for Codex CLI."
