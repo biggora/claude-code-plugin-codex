@@ -14,9 +14,8 @@ verbatim.
 Run exactly one Bash call:
 
 ```
-node ${CODEX_PLUGIN_ROOT}/scripts/claude-companion.mjs task --json \
+node ${PLUGIN_ROOT}/scripts/claude-companion.mjs task --json \
   [--write] \
-  [--fresh | --resume <session_id>] \
   [--effort minimal|low|medium|high|xhigh] \
   [--model claude-opus-4-7|claude-sonnet-4-6|claude-haiku-4-5-20251001] \
   "<full prompt>"
@@ -26,8 +25,6 @@ Flag semantics:
 - `--write`: Enable Claude tool-use so it can Read/Write/Edit files. OFF by
   default — the rescue agent is a reviewer, not an implementor, unless
   explicitly asked.
-- `--fresh`: Ignore any prior stored Claude context and start clean.
-- `--resume <id>`: Continue a previously-tracked Claude task by id.
 - `--effort`: Hints maximum output tokens. `minimal` → 1k, `low` → 2k,
   `medium` → 8k (default), `high` → 16k, `xhigh` → 32k.
 - `--model`: Override the default model for this call only.

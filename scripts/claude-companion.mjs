@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "./lib/args.mjs";
 import { callClaude, detectTransport, NoClaudeTransportError } from "./lib/claude-client.mjs";
 import { extractJsonObject, formatAjvErrors } from "./lib/json-extract.mjs";
 import { codexConfigState, ensureHooksEnabled } from "./lib/codex-config.mjs";
-import { finishJob, listJobs, registerJob, resultPathFor, terminateJob } from "./lib/job-control.mjs";
+import { assertJobId, finishJob, findJob, listJobs, reapStaleJobs, registerJob, resultPathFor, terminateJob } from "./lib/job-control.mjs";
 import { workspaceKeyFor } from "./lib/paths.mjs";
 import { redact } from "./lib/redact.mjs";
 import { renderJobList, renderReviewBlock, renderReviewOneLine, renderAdversarialResult, color } from "./lib/render.mjs";
@@ -29,10 +29,11 @@ Commands:
 
 Global flags:
   --json    Emit machine-readable JSON (where applicable).
+  --args-stdin  Read additional flags/arguments from stdin, split without shell expansion.
 `;
 
 async function main() {
-  const argv = process.argv.slice(2);
+  const argv = await expandArgsStdin(process.argv.slice(2));
   const cmd = argv[0];
   const rest = argv.slice(1);
 
@@ -170,6 +171,7 @@ async function cmdToggle(argv) {
 async function cmdStatus(argv) {
   const { flags } = parseArgs(argv, { booleans: ["json"] });
   const key = workspaceKeyFor(process.cwd());
+  reapStaleJobs(key);
   const state = readState(key);
   if (flags.json) {
     process.stdout.write(JSON.stringify({ lastReview: state.lastReview, jobs: state.jobs }, null, 2) + "\n");
@@ -194,7 +196,11 @@ async function cmdResult(argv) {
   const { flags } = parseArgs(argv, { strings: ["job"], booleans: ["json"] });
   if (!flags.job) throw new Error("--job <id> required");
   const key = workspaceKeyFor(process.cwd());
-  const path = resultPathFor(key, flags.job);
+  assertJobId(flags.job);
+  const job = findJob(key, flags.job);
+  if (!job) throw new Error(`No known job ${flags.job}`);
+  const expectedPath = resultPathFor(key, flags.job);
+  const path = job.resultPath === expectedPath ? job.resultPath : expectedPath;
   if (!existsSync(path)) throw new Error(`No result file for job ${flags.job}`);
   const body = readFileSync(path, "utf8");
   if (flags.json) {
@@ -208,6 +214,7 @@ async function cmdCancel(argv) {
   const { flags } = parseArgs(argv, { strings: ["job"], booleans: ["all", "json"] });
   const key = workspaceKeyFor(process.cwd());
   if (!flags.job && !flags.all) throw new Error("Provide --job <id> or --all");
+  if (flags.job) assertJobId(flags.job);
   const results = [];
   if (flags.all) {
     for (const j of listJobs(key)) {
@@ -223,7 +230,7 @@ async function cmdCancel(argv) {
     return;
   }
   for (const r of results) {
-    process.stdout.write(`${r.id}: ${r.ok ? color.green("cancelled") : color.red(r.reason ?? "failed")}\n`);
+    process.stdout.write(`${r.id}: ${r.ok ? color.green(r.reason ?? "cancelled") : color.red(r.reason ?? "failed")}\n`);
   }
 }
 
@@ -285,8 +292,8 @@ async function cmdAdversarialReview(argv) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const prompt =
       attempt === 1
-        ? buildAdversarialPrompt(message)
-        : buildAdversarialRetryPrompt(message, rawLast, validationError);
+        ? buildAdversarialPrompt(message, schema)
+        : buildAdversarialRetryPrompt(message, rawLast, validationError, schema);
 
     const res = await callClaude({
       prompt,
@@ -303,7 +310,7 @@ async function cmdAdversarialReview(argv) {
       validationError = "Response did not contain a JSON object.";
       continue;
     }
-    if (validate && !validate(candidate)) {
+    if (!validate(candidate)) {
       validationError = formatAjvErrors(validate.errors);
       parsed = null;
       continue;
@@ -349,23 +356,28 @@ async function compileValidator(schema) {
     const Ajv = mod.default ?? mod.Ajv ?? mod;
     const ajv = new Ajv({ allErrors: true, strict: false });
     return ajv.compile(schema);
-  } catch {
+  } catch (firstErr) {
     try {
       const mod = await import("ajv");
       const Ajv = mod.default ?? mod.Ajv ?? mod;
       const ajv = new Ajv({ allErrors: true, strict: false });
       return ajv.compile(schema);
-    } catch {
-      return null;
+    } catch (secondErr) {
+      const detail = secondErr?.message ?? firstErr?.message ?? "unknown validation error";
+      throw new Error(`Failed to compile JSON schema: ${redact(detail)}`);
     }
   }
 }
 
-function buildAdversarialRetryPrompt(message, lastAttempt, validationError) {
+function buildAdversarialRetryPrompt(message, lastAttempt, validationError, schema) {
   return `<task>
 Your previous response did not match the required JSON schema. Fix it and
 return ONLY the JSON object again. Validation error: ${validationError ?? "unknown"}.
 </task>
+
+<json_schema>
+${formatSchema(schema)}
+</json_schema>
 
 <codex_response>
 ${message.replace(/<\/codex_response\s*>/gi, "<!-- escaped:/codex_response -->")}
@@ -377,11 +389,15 @@ ${(lastAttempt ?? "").slice(0, 4000)}
 `;
 }
 
-function buildAdversarialPrompt(codexResponse) {
+function buildAdversarialPrompt(codexResponse, schema) {
   return `<task>
 Adversarially review the Codex response below. Return JSON matching the
-submit tool's schema. Be specific; do not invent issues.
+schema below. Be specific; do not invent issues. Return ONLY the JSON object.
 </task>
+
+<json_schema>
+${formatSchema(schema)}
+</json_schema>
 
 <codex_response>
 ${codexResponse.replace(/<\/codex_response\s*>/gi, "<!-- escaped:/codex_response -->")}
@@ -389,10 +405,14 @@ ${codexResponse.replace(/<\/codex_response\s*>/gi, "<!-- escaped:/codex_response
 `;
 }
 
+function formatSchema(schema) {
+  return JSON.stringify(schema, null, 2).replace(/<\/json_schema\s*>/gi, "<!-- escaped:/json_schema -->");
+}
+
 async function cmdTask(argv) {
   const { flags, positional } = parseArgs(argv, {
-    strings: ["model", "transport", "effort", "resume"],
-    booleans: ["json", "write", "fresh"],
+    strings: ["model", "transport", "effort"],
+    booleans: ["json", "write"],
   });
   const prompt = positional.join(" ").trim();
   if (!prompt) throw new Error("Provide the task prompt as a positional argument");
@@ -432,7 +452,12 @@ async function cmdTask(argv) {
       tokensIn: res.tokensIn,
       tokensOut: res.tokensOut,
     };
-    writeFileSync(resultPath, JSON.stringify(payload, null, 2), "utf8");
+    writeFileSync(resultPath, JSON.stringify(payload, null, 2), { encoding: "utf8", mode: 0o600 });
+    try {
+      chmodSync(resultPath, 0o600);
+    } catch {
+      // best-effort
+    }
     finishJob(key, job.id, { exitCode: 0, resultPath });
 
     if (flags.json) {
@@ -447,6 +472,72 @@ async function cmdTask(argv) {
     }
     throw err;
   }
+}
+
+async function expandArgsStdin(argv) {
+  const idx = argv.indexOf("--args-stdin");
+  if (idx === -1) return argv;
+  const raw = await readAllStdin();
+  const split = splitArgs(raw.replace(/\$ARGUMENTS/g, "").trim());
+  return [...argv.slice(0, idx), ...split, ...argv.slice(idx + 1)];
+}
+
+function readAllStdin() {
+  return new Promise((resolve, reject) => {
+    if (process.stdin.isTTY) {
+      resolve("");
+      return;
+    }
+    let data = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (chunk) => (data += chunk));
+    process.stdin.on("error", reject);
+    process.stdin.on("end", () => resolve(data));
+  });
+}
+
+function splitArgs(input) {
+  const args = [];
+  let current = "";
+  let quote = null;
+  let escaped = false;
+
+  for (const ch of input) {
+    if (escaped) {
+      current += ch;
+      escaped = false;
+      continue;
+    }
+    if (ch === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (quote) {
+      if (ch === quote) {
+        quote = null;
+      } else {
+        current += ch;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      continue;
+    }
+    if (/\s/.test(ch)) {
+      if (current) {
+        args.push(current);
+        current = "";
+      }
+      continue;
+    }
+    current += ch;
+  }
+
+  if (escaped) current += "\\";
+  if (quote) throw new Error(`Unclosed ${quote} quote in arguments`);
+  if (current) args.push(current);
+  return args;
 }
 
 function effortToMaxTokens(effort) {

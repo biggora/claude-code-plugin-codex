@@ -16,14 +16,14 @@ One Bash call, no shell features needed. Always pass `--json` so the return
 is machine-readable.
 
 ```
-node ${CODEX_PLUGIN_ROOT}/scripts/claude-companion.mjs <subcommand> --json [flags] "<prompt or codex response>"
+node ${PLUGIN_ROOT}/scripts/claude-companion.mjs <subcommand> --json [flags] "<prompt or codex response>"
 ```
 
 Subcommands you are likely to invoke:
 
 | Subcommand | When | Key flags |
 |---|---|---|
-| `task` | Rescue / deep reasoning / rewrite | `--write`, `--model`, `--transport`, `--effort`, `--resume <id>`, `--fresh` |
+| `task` | Rescue / deep reasoning / rewrite | `--write`, `--model`, `--transport`, `--effort` |
 | `review` | Spot-check a Codex response (ALLOW/BLOCK verdict) | `--model`, `--transport` |
 | `adversarial-review` | Structured findings (schema-validated) | `--model`, `--schema <path>` |
 | `status` | Inspect tracked jobs | — |
@@ -41,9 +41,6 @@ Subcommands you are likely to invoke:
   CLI first, `@anthropic-ai/sdk` second.
 - `--effort`: `minimal | low | medium | high | xhigh`. Maps to output-token
   budget (1k / 2k / 8k / 16k / 32k).
-- `--fresh` vs `--resume <id>`: Start a clean Claude conversation, or
-  continue a specific tracked job by id.
-
 ## Return format
 
 Every `--json` invocation emits a single JSON object on stdout. Shape for
@@ -81,9 +78,6 @@ or `{ok: false, error, raw}` on schema-invalid output after 2 attempts.
 → Use `task` with `--effort high`, no `--write` unless they specifically say
 "let Claude edit files". Pass the full context they gave you.
 
-**Does the user want to tweak a prior Claude run?**
-→ Use `task --resume <jobId>` (get id from `status`).
-
 **Is the user asking about plugin state, not content?**
 → `status` / `result` / `cancel`. Do not route through Claude.
 
@@ -98,8 +92,9 @@ or `{ok: false, error, raw}` on schema-invalid output after 2 attempts.
 
 ## Do NOT
 
-- Do not shell-interpolate user input into the prompt argument; rely on the
-  host's `Bash` tool, which already passes `$ARGUMENTS` safely.
+- Do not shell-interpolate user input into the prompt argument; pass slash
+  command input through `--args-stdin` so the companion splits it without
+  shell expansion.
 - Do not call `claude` CLI or `@anthropic-ai/sdk` directly — always go
   through the companion so jobs, state, and redaction are consistent.
 - Do not summarize or paraphrase Claude's `rawOutput` when you dispatched a

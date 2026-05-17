@@ -69,3 +69,22 @@ test("job-control: terminateJob unknown id", async () => {
     delete process.env.CODEX_PLUGIN_DATA;
   }
 });
+
+test("job-control: resultPathFor rejects traversal-shaped job ids", async () => {
+  const tmp = mkdtempSync(join(tmpdir(), "cr-jobs-path-"));
+  process.env.CODEX_PLUGIN_DATA = tmp;
+  try {
+    const { resultPathFor, newJobId, isJobId } = await import(
+      "../scripts/lib/job-control.mjs?t=" + (Date.now() + 3)
+    );
+    const key = "wkspckeypath";
+    const id = newJobId();
+    assert.equal(isJobId(id), true);
+    assert.match(resultPathFor(key, id), new RegExp(`${id}\\.json$`));
+    assert.throws(() => resultPathFor(key, "..\\state"), /Invalid job id/);
+    assert.throws(() => resultPathFor(key, "../state"), /Invalid job id/);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+    delete process.env.CODEX_PLUGIN_DATA;
+  }
+});

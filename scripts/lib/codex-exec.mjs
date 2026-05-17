@@ -27,7 +27,7 @@ export async function* runCodexExec({ prompt, resume, sessionId, cwd, sandbox = 
 
   const child = spawn("codex", baseArgs, {
     cwd,
-    env: process.env,
+    env: buildCodexChildEnv(process.env),
     stdio: ["ignore", "pipe", "pipe"],
     shell: false,
   });
@@ -120,6 +120,24 @@ export async function* runCodexExec({ prompt, resume, sessionId, cwd, sandbox = 
     exitCode,
     stderr: Buffer.concat(stderrChunks).toString("utf8").slice(-4000),
   };
+}
+
+export function buildCodexChildEnv(baseEnv = process.env) {
+  const env = { ...baseEnv };
+  for (const key of Object.keys(env)) {
+    const upper = key.toUpperCase();
+    if (upper.startsWith("ANTHROPIC_")) {
+      delete env[key];
+      continue;
+    }
+    if (
+      upper.startsWith("CLAUDE_") &&
+      /(KEY|TOKEN|SECRET|AUTH|CREDENTIAL|PASSWORD)/.test(upper)
+    ) {
+      delete env[key];
+    }
+  }
+  return env;
 }
 
 export async function collectTurn(generator) {

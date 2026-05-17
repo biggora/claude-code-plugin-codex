@@ -1,6 +1,6 @@
 ---
 description: Delegate a hard task or a rewrite to Claude via the claude-rescue subagent.
-argument-hint: "<task prompt>" [--fresh | --resume <session_id>] [--effort minimal|low|medium|high|xhigh] [--model <id>] [--write]
+argument-hint: "<task prompt>" [--effort minimal|low|medium|high|xhigh] [--model <id>] [--write]
 allowed-tools: Task
 ---
 
@@ -9,7 +9,10 @@ or when a review verdict demands a rewrite Codex cannot produce, hand off to
 Claude. The `claude-rescue` subagent wraps a single call to:
 
 ```
-node ${CODEX_PLUGIN_ROOT}/scripts/claude-companion.mjs task --json $ARGUMENTS
+PLUGIN_ROOT="${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}"
+node "$PLUGIN_ROOT/scripts/claude-companion.mjs" task --json --args-stdin <<'CLAUDE_REVIEW_ARGS'
+$ARGUMENTS
+CLAUDE_REVIEW_ARGS
 ```
 
 Defaults:

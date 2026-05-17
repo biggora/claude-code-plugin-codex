@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CODEX_PLUGIN_ROOT}/scripts/stop-review-hook.mjs",
+            "command": "node \"${PLUGIN_ROOT}/scripts/stop-review-hook.mjs\"",
             "statusMessage": "Reviewing turn with Claude...",
             "timeout": 900
           }
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CODEX_PLUGIN_ROOT}/scripts/session-lifecycle-hook.mjs",
+            "command": "node \"${PLUGIN_ROOT}/scripts/session-lifecycle-hook.mjs\"",
             "timeout": 10
           }
         ]

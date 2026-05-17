@@ -1,5 +1,7 @@
 #!/usr/bin/env node
+import { reapStaleJobs } from "./lib/job-control.mjs";
 import { log } from "./lib/log.mjs";
+import { workspaceKeyFor } from "./lib/paths.mjs";
 import { redact } from "./lib/redact.mjs";
 
 async function main() {
@@ -9,6 +11,8 @@ async function main() {
       event: payload?.hook_event_name,
       source: payload?.source,
     });
+    const cwd = typeof payload?.cwd === "string" ? payload.cwd : process.cwd();
+    reapStaleJobs(workspaceKeyFor(cwd), { sessionId: payload?.session_id });
   } catch (err) {
     log.debug("session-lifecycle-hook: non-fatal error", { err: redact(err?.message ?? "") });
   }

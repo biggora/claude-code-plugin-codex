@@ -9,7 +9,10 @@ Toggle the Claude review gate for the current workspace. When ON, every Codex
 actionable critique back to Codex.
 
 ```
-node ${CODEX_PLUGIN_ROOT}/scripts/claude-companion.mjs toggle $ARGUMENTS
+PLUGIN_ROOT="${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}"
+node "$PLUGIN_ROOT/scripts/claude-companion.mjs" toggle --args-stdin <<'CLAUDE_REVIEW_ARGS'
+$ARGUMENTS
+CLAUDE_REVIEW_ARGS
 ```
 
 Echo the resulting status.

@@ -1,9 +1,8 @@
 {
   "name": "claude-code-plugin-codex",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Claude review plugin for Codex CLI — inverse of openai/codex-plugin-cc. Stop-time review of Codex turns by Claude.",
   "type": "module",
-  "private": true,
   "engines": {
     "node": ">=20.10"
   },
@@ -26,13 +25,11 @@
   },
   "dependencies": {
     "tree-kill": "^1.2.2",
-    "@iarna/toml": "^2.2.5"
+    "@iarna/toml": "^2.2.5",
+    "ajv": "^8.17.0"
   },
   "optionalDependencies": {
     "@anthropic-ai/sdk": "^0.40.0"
-  },
-  "devDependencies": {
-    "ajv": "^8.17.0"
   },
   "keywords": [
     "codex",

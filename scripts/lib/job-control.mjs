@@ -1,13 +1,24 @@
 import { existsSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { join } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { log } from "./log.mjs";
 import { resultsDir } from "./paths.mjs";
 import { redact } from "./redact.mjs";
 import { updateState, readState } from "./state.mjs";
 
+const JOB_ID_RE = /^job_[a-f0-9]{16}$/;
+
 export function newJobId() {
   return "job_" + randomUUID().replace(/-/g, "").slice(0, 16);
+}
+
+export function isJobId(id) {
+  return typeof id === "string" && JOB_ID_RE.test(id);
+}
+
+export function assertJobId(id) {
+  if (!isJobId(id)) throw new Error(`Invalid job id: ${String(id)}`);
+  return id;
 }
 
 export function registerJob(workspaceKey, partial) {
@@ -107,7 +118,14 @@ async function killTree(pid) {
 }
 
 export function resultPathFor(workspaceKey, jobId) {
-  return join(resultsDir(workspaceKey), `${jobId}.json`);
+  assertJobId(jobId);
+  const root = resolve(resultsDir(workspaceKey));
+  const candidate = resolve(root, `${jobId}.json`);
+  const boundary = root.endsWith(sep) ? root : `${root}${sep}`;
+  if (!candidate.startsWith(boundary)) {
+    throw new Error(`Invalid result path for job id: ${jobId}`);
+  }
+  return candidate;
 }
 
 export function resultExists(workspaceKey, jobId) {

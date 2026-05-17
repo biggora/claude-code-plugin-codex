@@ -1,4 +1,4 @@
-import { appendFileSync } from "node:fs";
+import { appendFileSync, chmodSync } from "node:fs";
 import { logFile } from "./paths.mjs";
 import { redact } from "./redact.mjs";
 
@@ -21,7 +21,13 @@ function emit(level, message, extra) {
     // stderr broken — nothing to do
   }
   try {
-    appendFileSync(logFile(), line + "\n");
+    const file = logFile();
+    appendFileSync(file, line + "\n", { encoding: "utf8", mode: 0o600 });
+    try {
+      chmodSync(file, 0o600);
+    } catch {
+      // best-effort
+    }
   } catch {
     // filesystem unavailable — best-effort
   }

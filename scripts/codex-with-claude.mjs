@@ -41,7 +41,7 @@ async function main() {
 
   const sandbox = flags.sandbox ?? "workspace-write";
   const approval = flags.approval ?? "never";
-  const maxIterations = Number(flags["max-iterations"] ?? "3");
+  const maxIterations = parsePositiveInteger(flags["max-iterations"] ?? "3", "--max-iterations");
   const key = workspaceKeyFor(process.cwd());
 
   let currentPrompt = prompt;
@@ -102,11 +102,11 @@ async function main() {
     process.stderr.write(renderReviewBlock(result) + "\n");
 
     if (result.verdict === VERDICT_ALLOW || result.verdict === VERDICT_SKIP) {
-      process.exit(0);
+      process.exit(turn.exitCode ?? 0);
     }
     if (result.verdict !== VERDICT_BLOCK) {
       process.stderr.write(color.yellow("Review error — exiting without further iterations.\n"));
-      process.exit(0);
+      process.exit(turn.exitCode ?? 0);
     }
 
     if (iteration >= maxIterations) {
@@ -118,6 +118,14 @@ async function main() {
 
     currentPrompt = result.reason;
   }
+}
+
+function parsePositiveInteger(value, flagName) {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`${flagName} must be an integer >= 1`);
+  }
+  return n;
 }
 
 async function* tapEvents(gen, { json }) {

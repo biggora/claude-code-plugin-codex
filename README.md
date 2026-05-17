@@ -4,9 +4,9 @@ Inverse of [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc)
 That plugin uses Codex to review Claude Code turns; **this plugin uses
 Claude (Opus 4.7 by default) to review Codex turns**.
 
-> **Status:** v0.1 — all four milestones (M1–M4) complete. Stop hook,
+> **Status:** v1.0 — all four milestones (M1–M4) complete. Stop hook,
 > 8 slash commands, rescue subagent, adversarial review with schema
-> validation, Windows fallback wrapper, three skills, 63 passing unit tests.
+> validation, Windows fallback wrapper, three skills, and unit tests.
 
 ## What it does
 
@@ -24,8 +24,14 @@ Claude (Opus 4.7 by default) to review Codex turns**.
 
 ## Requirements
 
-- Codex CLI with `[features] codex_hooks = true` in `~/.codex/config.toml`.
-  `/claude-review:setup` writes this for you (with a timestamped backup).
+- Codex CLI with plugin hooks enabled in `~/.codex/config.toml`.
+  `/claude-review:setup` writes this for you (with a timestamped backup):
+
+```toml
+[features]
+hooks = true
+plugin_hooks = true
+```
 - Node.js ≥ 20.10.
 - **At least one Claude transport** (auto-detected):
   - **Recommended:** `claude` CLI on PATH — no extra keys needed, reuses
@@ -82,7 +88,7 @@ Config (workspace <hash>):
 | `/claude-review:cancel` | `--job <id>`, `--all`, `--json` | Tree-kill a running job. |
 | `/claude-review:review` | `"<text>"`, `--model`, `--transport`, `--json` | One-shot review of supplied text (ALLOW/BLOCK). |
 | `/claude-review:adversarial-review` | `"<text>"`, `--schema`, `--model`, `--transport`, `--json` | Schema-validated JSON review with one retry on invalid output. |
-| `/claude-review:rescue` | `"<task>"`, `--write`, `--fresh`, `--resume <id>`, `--effort`, `--model` | Delegate to Claude via the `claude-rescue` subagent. |
+| `/claude-review:rescue` | `"<task>"`, `--write`, `--effort`, `--model` | Delegate to Claude via the `claude-rescue` subagent. |
 
 ## Architecture
 
@@ -96,19 +102,19 @@ Config (workspace <hash>):
 │     ▼                                 ▼                 │
 │  ~/.codex/config.toml           scripts/lib/            │
 │  [features]                      ├─ review.mjs          │
-│    codex_hooks = true            ├─ claude-client.mjs   │
+│    hooks = true                  ├─ claude-client.mjs   │
 │                                  │    ├─ claude -p ◄──┐ │
 │                                  │    └─ @anthropic   │ │
-│                                  │        /sdk    ◄──┤ │
-│                                  ├─ prompts.mjs      │ │
-│                                  │   (+ injection   │ │
-│                                  │    defense)      │ │
-│                                  ├─ state.mjs  ◄────┤ │
-│                                  │   per-workspace   │ │
-│                                  │   toggle & jobs   │ │
-│                                  └─ redact.mjs       │ │
+│                                  │        /sdk     ◄──┤ │
+│                                  ├─ prompts.mjs       │ │
+│                                  │   (+ injection     │ │
+│                                  │    defense)        │ │
+│                                  ├─ state.mjs    ◄────┤ │
+│                                  │   per-workspace    │ │
+│                                  │   toggle & jobs    │ │
+│                                  └─ redact.mjs        │ │
 │                                                       │ │
-│  Stop stdout: {"decision":"block","reason":"..."}    │ │
+│  Stop stdout: {"decision":"block","reason":"..."}     │ │
 │     ▲                                                 │ │
 │     └──── parseVerdict first line ALLOW:/BLOCK: ◄─────┘ │
 └─────────────────────────────────────────────────────────┘
@@ -191,7 +197,7 @@ node scripts/codex-with-claude.mjs "Implement user registration" \
 ## Development
 
 ```bash
-npm test           # 63 unit tests (node --test)
+npm test           # unit tests (node --test)
 npm run test:int   # integration tests (gated; needs real claude + codex)
 ```
 

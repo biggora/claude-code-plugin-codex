@@ -10,7 +10,10 @@ Stop hook, but does not affect session state. Intended for spot-checks or for
 reviewing a prior turn.
 
 ```
-node ${CODEX_PLUGIN_ROOT}/scripts/claude-companion.mjs review $ARGUMENTS
+PLUGIN_ROOT="${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT}}"
+node "$PLUGIN_ROOT/scripts/claude-companion.mjs" review --args-stdin <<'CLAUDE_REVIEW_ARGS'
+$ARGUMENTS
+CLAUDE_REVIEW_ARGS
 ```
 
 Render the verdict block. If BLOCK, present the critique so the user can

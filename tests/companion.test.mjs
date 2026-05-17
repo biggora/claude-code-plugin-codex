@@ -8,9 +8,10 @@ import { fileURLToPath } from "node:url";
 
 const COMPANION = fileURLToPath(new URL("../scripts/claude-companion.mjs", import.meta.url));
 
-function runCompanion(args, env = {}) {
+function runCompanion(args, env = {}, input = undefined) {
   return spawnSync("node", [COMPANION, ...args], {
     env: { ...process.env, NO_COLOR: "1", ...env },
+    input,
     encoding: "utf8",
   });
 }
@@ -78,4 +79,26 @@ test("companion: result with missing job id errors clearly", () => {
   const r = runCompanion(["result"], { CODEX_PLUGIN_DATA: mkdtempSync(join(tmpdir(), "cr-result-")) });
   assert.notEqual(r.status, 0);
   assert.match(r.stderr, /--job/);
+});
+
+test("companion: result rejects invalid job id before file access", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "cr-result-invalid-"));
+  try {
+    const r = runCompanion(["result", "--job", "..\\state"], { CODEX_PLUGIN_DATA: tmp });
+    assert.notEqual(r.status, 0);
+    assert.match(r.stderr, /Invalid job id/);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("companion: --args-stdin expands command arguments without shell execution", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "cr-stdin-"));
+  try {
+    const r = runCompanion(["toggle", "--args-stdin"], { CODEX_PLUGIN_DATA: tmp }, "--on --json");
+    assert.equal(r.status, 0, r.stderr);
+    assert.deepEqual(JSON.parse(r.stdout.trim()), { reviewGate: true });
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
 });

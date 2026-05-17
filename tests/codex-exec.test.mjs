@@ -3,7 +3,7 @@ import { strict as assert } from "node:assert";
 import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
-import { collectTurn, CODEX_EVENT } from "../scripts/lib/codex-exec.mjs";
+import { buildCodexChildEnv, collectTurn, CODEX_EVENT } from "../scripts/lib/codex-exec.mjs";
 
 async function* replayJsonl(path) {
   const rl = createInterface({ input: createReadStream(path), crlfDelay: Infinity });
@@ -48,4 +48,23 @@ test("collectTurn: handles tool / user items without conflating with assistant t
   }
   const result = await collectTurn(gen());
   assert.equal(result.lastAssistantMessage?.trim(), "Done.");
+});
+
+test("buildCodexChildEnv: strips Claude and Anthropic credentials", () => {
+  const env = buildCodexChildEnv({
+    PATH: "keep",
+    CODEX_HOME: "keep-too",
+    ANTHROPIC_API_KEY: "secret",
+    ANTHROPIC_AUTH_TOKEN: "secret",
+    CLAUDE_SESSION_TOKEN: "secret",
+    CLAUDE_PLUGIN_ROOT: "/plugin",
+    CLAUDE_PLUGIN_DATA: "/data",
+  });
+  assert.equal(env.PATH, "keep");
+  assert.equal(env.CODEX_HOME, "keep-too");
+  assert.equal(env.CLAUDE_PLUGIN_ROOT, "/plugin");
+  assert.equal(env.CLAUDE_PLUGIN_DATA, "/data");
+  assert.equal(env.ANTHROPIC_API_KEY, undefined);
+  assert.equal(env.ANTHROPIC_AUTH_TOKEN, undefined);
+  assert.equal(env.CLAUDE_SESSION_TOKEN, undefined);
 });

@@ -1,6 +1,6 @@
 {
   "name": "claude-review",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Review Codex turns with Claude on Stop. Inverse of openai/codex-plugin-cc.",
   "author": {
     "name": "agbiggora",
@@ -36,11 +36,8 @@
       "/claude-review:status"
     ]
   },
-  "skills": [
-    "claude-cli-runtime",
-    "claude-result-handling",
-    "claude-api-prompting"
-  ],
+  "skills": "./skills/",
+  "hooks": "./hooks.json",
   "mcpServers": {},
   "apps": {}
 }

@@ -1,0 +1,10 @@
+tests/
+.git/
+.github/
+.agents/
+.idea/
+specs/
+*.tgz
+*.log
+.env
+.env.*
