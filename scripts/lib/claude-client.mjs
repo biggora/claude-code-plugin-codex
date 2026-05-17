@@ -1,4 +1,6 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { log } from "./log.mjs";
 import { redact, redactError } from "./redact.mjs";
 
@@ -28,11 +30,26 @@ export async function detectTransport({ force = false } = {}) {
 
 async function hasClaudeCli() {
   try {
-    const { code } = await runCapture("claude", ["--version"], { timeoutMs: 3000 });
+    const { code } = await runCapture(resolveClaudeCliCommand(), ["--version"], { timeoutMs: 3000 });
     return code === 0;
   } catch {
     return false;
   }
+}
+
+function resolveClaudeCliCommand() {
+  if (process.platform !== "win32") return "claude";
+
+  const npmGlobalExe = join(
+    dirname(process.execPath),
+    "node_modules",
+    "@anthropic-ai",
+    "claude-code",
+    "bin",
+    "claude.exe",
+  );
+
+  return existsSync(npmGlobalExe) ? npmGlobalExe : "claude";
 }
 
 async function hasAnthropicSdk() {
@@ -101,7 +118,7 @@ async function callViaCli({ prompt, model, maxToolCalls, timeoutMs, cwd, allowWr
     args.push("--allowedTools", "none");
   }
 
-  const { code, stdout, stderr } = await runCapture("claude", args, {
+  const { code, stdout, stderr } = await runCapture(resolveClaudeCliCommand(), args, {
     timeoutMs,
     cwd,
     stdin: prompt,
